@@ -1,13 +1,12 @@
 name: Build, Test and Analyze
 
 on:
+  # Dispara a análise quando houver um push na branch 'main'
   push:
     branches:
       - main
-
-  pull_request:
-    branches:
-      - principal
+  # Também dispara em Pull Requests
+  pull_requests:
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -33,4 +32,4 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
