@@ -26,8 +26,8 @@ class CadastrarBicicletaUseCase:
 class ListarBicicletasUseCase:
     def __init__(self, repository: BicicletaRepositoryInterface):
         self.repository = repository
-    def execute(self) -> List[Bicicleta]:
-        return self.repository.listar_todas()
+    def execute(self, include_deleted: bool = False) -> List[Bicicleta]:
+        return self.repository.listar_todas(include_deleted=include_deleted)
 
 class BuscarBicicletaPorIdUseCase:
     def __init__(self, repository: BicicletaRepositoryInterface):
@@ -39,6 +39,21 @@ class DeletarBicicletaUseCase:
     def __init__(self, repository: BicicletaRepositoryInterface):
         self.repository = repository
     def execute(self, bicicleta_id: int) -> None:
+        # 1. Busca a bicicleta antes de deletar
+        bicicleta = self.repository.buscar_por_id(bicicleta_id)
+
+        # 2. Valida se a bicicleta existe
+        if not bicicleta:
+            raise ValueError("Bicicleta não encontrada.")
+
+        # 3. Valida a regra de negócio (UC10-R4)
+        # A regra diz que apenas bicicletas com status "aposentada" podem ser excluídas.
+        # A verificação de "não estar em nenhuma tranca" é implícita no status "aposentada",
+        # pois para ser aposentada, ela já teve que ser retirada de uma tranca.
+        if bicicleta.status != StatusBicicleta.APOSENTADA:
+            raise ValueError(f"Ação negada. Apenas bicicletas com status 'APOSENTADA' podem ser excluídas. Status atual: '{bicicleta.status.value}'.")
+
+        # 4. Se todas as validações passarem, executa a exclusão
         self.repository.deletar(bicicleta_id)
 
 class AlterarStatusBicicletaUseCase:
@@ -158,8 +173,8 @@ class CadastrarTrancaUseCase:
 class ListarTrancasUseCase:
     def __init__(self, repository: TrancaRepositoryInterface):
         self.repository = repository
-    def execute(self) -> List[Tranca]:
-        return self.repository.listar_todas()
+    def execute(self, include_deleted: bool = False) -> List[Tranca]:
+        return self.repository.listar_todas(include_deleted=include_deleted)
         
 class BuscarTrancaPorIdUseCase:
     def __init__(self, repository: TrancaRepositoryInterface):
@@ -171,6 +186,19 @@ class DeletarTrancaUseCase:
     def __init__(self, repository: TrancaRepositoryInterface):
         self.repository = repository
     def execute(self, tranca_id: int) -> None:
+        # 1. Busca a tranca
+        tranca = self.repository.buscar_por_id(tranca_id)
+
+        # 2. Valida se a tranca existe
+        if not tranca:
+            raise ValueError("Tranca não encontrada.")
+
+        # 3. Valida a regra de negócio (UC13-R4)
+        # A regra diz que apenas trancas sem bicicleta podem ser excluídas.
+        if tranca.status == StatusTranca.OCUPADA or tranca.bicicleta_id is not None:
+            raise ValueError("Ação negada. Não é possível excluir uma tranca que está ocupada por uma bicicleta.")
+
+        # 4. Procede com a exclusão
         self.repository.deletar(tranca_id)
 
 class AlterarStatusTrancaUseCase:
@@ -281,8 +309,8 @@ class CadastrarTotemUseCase:
 class ListarTotensUseCase:
     def __init__(self, repository: TotemRepositoryInterface):
         self.repository = repository
-    def execute(self) -> List[Totem]:
-        return self.repository.listar_todos()
+    def execute(self, include_deleted: bool = False) -> List[Totem]:
+        return self.repository.listar_todos(include_deleted=include_deleted)
 
 class BuscarTotemPorIdUseCase:
     def __init__(self, repository: TotemRepositoryInterface):
@@ -291,10 +319,30 @@ class BuscarTotemPorIdUseCase:
         return self.repository.buscar_por_id(totem_id)
 
 class DeletarTotemUseCase:
-    def __init__(self, repository: TotemRepositoryInterface):
-        self.repository = repository
+    # O construtor agora recebe os dois repositórios
+    def __init__(self, totem_repo: TotemRepositoryInterface, tranca_repo: TrancaRepositoryInterface):
+        self.totem_repo = totem_repo
+        self.tranca_repo = tranca_repo
+
     def execute(self, totem_id: int) -> None:
-        self.repository.deletar(totem_id)
+        # 1. Valida se o totem existe
+        totem = self.totem_repo.buscar_por_id(totem_id)
+        if not totem:
+            raise ValueError("Totem não encontrado.")
+
+        # 2. Valida a regra de negócio (UC14-R3)
+        # Verifica se existem trancas associadas a este totem
+        trancas_no_totem = self.tranca_repo.buscar_por_totem_id(totem_id)
+        if trancas_no_totem:
+            raise ValueError(f"Ação negada. O totem possui {len(trancas_no_totem)} tranca(s) associada(s) e não pode ser excluído.")
+
+        # 3. Procede com a exclusão
+        self.totem_repo.deletar(totem_id)
+
+# Lembre-se de atualizar a instanciação deste caso de uso em src/equipamento/infrastructure/web/routes.py
+# de: deletar_totem_uc = DeletarTotemUseCase(repository=totem_repo)
+# para: deletar_totem_uc = DeletarTotemUseCase(totem_repo=totem_repo, tranca_repo=tranca_repo)
+
 
 
 class AtualizarBicicletaUseCase:
@@ -304,20 +352,17 @@ class AtualizarBicicletaUseCase:
     def __init__(self, repository: BicicletaRepositoryInterface):
         self.repository = repository
 
-    def execute(self, bicicleta_id: int, dados_atualizacao: dict) -> Bicicleta:
-        # 1. Busca a bicicleta existente
+     def execute(self, bicicleta_id: int, dados_atualizacao: dict) -> Bicicleta:
         bicicleta = self.repository.buscar_por_id(bicicleta_id)
         if not bicicleta:
             raise ValueError("Bicicleta não encontrada.")
 
-        # 2. Atualiza os campos permitidos
-        # Nota: Não permitimos atualizar ID ou STATUS por este método.
+        # Atualiza apenas os campos permitidos
         bicicleta.marca = dados_atualizacao.get("marca", bicicleta.marca)
         bicicleta.modelo = dados_atualizacao.get("modelo", bicicleta.modelo)
         bicicleta.ano = dados_atualizacao.get("ano", bicicleta.ano)
-        bicicleta.numero = dados_atualizacao.get("numero", bicicleta.numero)
-        
-        # 3. Salva a bicicleta atualizada (o método salvar lida com updates)
+        # O campo 'numero' não é mais atualizado, respeitando a regra de negócio.
+    
         return self.repository.salvar(bicicleta)
 
 
@@ -328,17 +373,19 @@ class AtualizarTrancaUseCase:
     def __init__(self, repository: TrancaRepositoryInterface):
         self.repository = repository
 
-    def execute(self, tranca_id: int, dados_atualizacao: dict) -> Tranca:
+     def execute(self, tranca_id: int, dados_atualizacao: dict) -> Tranca:
         tranca = self.repository.buscar_por_id(tranca_id)
         if not tranca:
             raise ValueError("Tranca não encontrada.")
 
-        tranca.numero = dados_atualizacao.get("numero", tranca.numero)
+        # Atualiza apenas os campos permitidos
         tranca.localizacao = dados_atualizacao.get("localizacao", tranca.localizacao)
         tranca.ano_de_fabricacao = dados_atualizacao.get("ano_de_fabricacao", tranca.ano_de_fabricacao)
         tranca.modelo = dados_atualizacao.get("modelo", tranca.modelo)
+        # O campo 'numero' não é mais atualizado.
         
         return self.repository.salvar(tranca)
+
 
 
 class AtualizarTotemUseCase:

@@ -100,21 +100,27 @@ def test_atualizar_bicicleta_api():
 
 
 def test_deletar_bicicleta_api():
-    # Arrange
+    # Arrange: Cria uma bicicleta nova
     payload = {"marca": "Para Deletar", "modelo": "Tchau", "ano": "2024", "numero": 6}
     response_post = client.post("/api/bicicletas", json=payload)
     new_id = response_post.json()["id"]
 
-    # Act
+    # Act: Deleta a bicicleta
     response_delete = client.delete(f"/api/bicicletas/{new_id}")
 
-    # Assert
-    # 1. Verifica se a deleção foi bem-sucedida
+    # Assert: Verifica se a deleção foi bem-sucedida
     assert response_delete.status_code == 204
 
-    # 2. Verifica se a bicicleta realmente não existe mais
-    response_get = client.get(f"/api/bicicletas/{new_id}")
-    assert response_get.status_code == 404
+    # Assert: Verifica se a busca normal agora retorna 404
+    assert client.get(f"/api/bicicletas/{new_id}").status_code == 404
+
+    # Assert: Verifica se a listagem com include_deleted=true INCLUI a bicicleta
+    response_list_deleted = client.get("/api/bicicletas?include_deleted=true")
+    item_deletado = next((b for b in response_list_deleted.json() if b["id"] == new_id), None)
+    
+    assert response_list_deleted.status_code == 200
+    assert item_deletado is not None
+    assert item_deletado["is_deleted"] is True
 
 def test_criar_tranca_api():
     # Arrange
@@ -184,15 +190,20 @@ def test_atualizar_tranca_api():
 
 def test_deletar_tranca_api():
     # Arrange
-    payload = {"numero": 501, "localizacao": "F", "ano_de_fabricacao": "2024", "modelo": "M6"}
+    payload = {"numero": 909, "localizacao": "F", "ano_de_fabricacao": "2024", "modelo": "M6"}
     response_post = client.post("/api/trancas", json=payload)
     new_id = response_post.json()["id"]
     # Act
     response_delete = client.delete(f"/api/trancas/{new_id}")
-    response_get = client.get(f"/api/trancas/{new_id}")
     # Assert
     assert response_delete.status_code == 204
-    assert response_get.status_code == 404
+    # Verifica que a busca normal falha
+    assert client.get(f"/api/trancas/{new_id}").status_code == 404
+    # Verifica que a busca com include_deleted funciona e o item está marcado
+    response_get_deleted = client.get(f"/api/trancas?include_deleted=true")
+    item_deletado = next((t for t in response_get_deleted.json() if t["id"] == new_id), None)
+    assert item_deletado is not None
+    assert item_deletado["is_deleted"] is True
 
 def test_criar_totem_api():
     # Arrange
@@ -246,16 +257,21 @@ def test_atualizar_totem_api():
 
 def test_deletar_totem_api():
     # Arrange
-    payload = {"localizacao": "D", "descricao": "Deletar"}
+    payload = {"localizacao": "Para Deletar", "descricao": "Totem de Teste"}
     response_post = client.post("/api/totens", json=payload)
     new_id = response_post.json()["id"]
     # Act
     response_delete = client.delete(f"/api/totens/{new_id}")
-    response_get = client.get(f"/api/totens/{new_id}")
     # Assert
     assert response_delete.status_code == 204
-    assert response_get.status_code == 404
-
+    # Verifica que a busca normal falha
+    assert client.get(f"/api/totens/{new_id}").status_code == 404
+    # Verifica que a busca com include_deleted funciona e o item está marcado
+    response_get_deleted = client.get(f"/api/totens?include_deleted=true")
+    item_deletado = next((t for t in response_get_deleted.json() if t["id"] == new_id), None)
+    assert item_deletado is not None
+    assert item_deletado["is_deleted"] is True
+    
 def test_integrar_bicicleta_na_rede_api():
     # Arrange: Cria uma bicicleta e uma tranca novas
     bicicleta_payload = {"marca": "Final", "modelo": "Teste", "ano": "2025", "numero": 1001}

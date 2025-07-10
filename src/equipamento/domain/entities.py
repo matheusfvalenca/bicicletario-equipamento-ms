@@ -36,6 +36,7 @@ class Bicicleta:
     # O ID é opcional porque uma bicicleta recém-criada
     # ainda não tem um ID até ser salva no banco de dados.
     id: Optional[int] = None
+    is_deleted: bool = False
 
 @dataclass
 class Tranca:
@@ -47,6 +48,7 @@ class Tranca:
     id: Optional[int] = None
     bicicleta_id: Optional[int] = None
     totem_id: Optional[int] = None
+    is_deleted: bool = False
 
 @dataclass
 class Totem:
@@ -56,3 +58,4 @@ class Totem:
     # Um totem contém uma lista de IDs de trancas.
     # Usamos field(default_factory=list) para inicializar uma lista vazia de forma segura.
     tranca_ids: List[int] = field(default_factory=list)
+    is_deleted: bool = False

@@ -26,16 +26,27 @@ class MemBicicletaRepository(BicicletaRepositoryInterface):
         
         self._dados[bicicleta.id] = bicicleta
         return bicicleta
+    
+# Alterado para retornar apenas se existir E não estiver deletada
+     def buscar_por_id(self, bicicleta_id: int) -> Optional[Bicicleta]:
+        bicicleta = self._dados.get(bicicleta_id)
+        if bicicleta and not bicicleta.is_deleted:
+            return bicicleta
+        return None
 
-    def buscar_por_id(self, bicicleta_id: int) -> Optional[Bicicleta]:
-        return self._dados.get(bicicleta_id)
-
-    def listar_todas(self) -> List[Bicicleta]:
+# Alterado para filtrar os deletados por padrão
+    def listar_todas(self, include_deleted: bool = False) -> List[Bicicleta]:
+        if not include_deleted:
+            return [b for b in self._dados.values() if not b.is_deleted]
         return list(self._dados.values())
     
-    def deletar(self, bicicleta_id: int) -> None:
-        if bicicleta_id in self._dados:
-            del self._dados[bicicleta_id]
+# Alterado para aplicar lógica de Soft Delete
+   def deletar(self, bicicleta_id: int) -> None:
+        bicicleta = self._dados.get(bicicleta_id)
+        if bicicleta:
+            # Marca como deletada e salva
+            bicicleta.is_deleted = True
+            self.salvar(bicicleta)
 
     def buscar_por_ids(self, bicicleta_ids: List[int]) -> List[Bicicleta]:
         # Filtra o dicionário de dados, pegando apenas as bicicletas
@@ -60,15 +71,26 @@ class MemTrancaRepository(TrancaRepositoryInterface):
         self._dados[tranca.id] = tranca
         return tranca
 
+# Alterado para retornar apenas se existir E não estiver deletada
     def buscar_por_id(self, tranca_id: int) -> Optional[Tranca]:
-        return self._dados.get(tranca_id)
+        tranca = self._dados.get(tranca_id)
+        if tranca and not tranca.is_deleted:
+            return tranca
+        return None
     
-    def listar_todas(self) -> List[Tranca]:
+# Alterado para filtrar os deletados por padrão
+    def listar_todas(self, include_deleted: bool = False) -> List[Tranca]:
+        if not include_deleted:
+            return [t for t in self._dados.values() if not t.is_deleted]
         return list(self._dados.values())
 
+# Alterado para aplicar lógica de Soft Delete
     def deletar(self, tranca_id: int) -> None:
-        if tranca_id in self._dados:
-            del self._dados[tranca_id]
+        tranca = self._dados.get(tranca_id)
+        if tranca:
+            # Marca como deletada e salva
+            tranca.is_deleted = True
+            self.salvar(tranca)
 
     def buscar_por_totem_id(self, totem_id: int) -> List[Tranca]:
         # Filtra a lista de trancas, retornando apenas aquelas
@@ -93,12 +115,23 @@ class MemTotemRepository(TotemRepositoryInterface):
         self._dados[totem.id] = totem
         return totem
 
+# Alterado para retornar apenas se existir E não estiver deletada
     def buscar_por_id(self, totem_id: int) -> Optional[Totem]:
-        return self._dados.get(totem_id)
-
-    def listar_todos(self) -> List[Totem]:
+        totem = self._dados.get(totem_id)
+        if totem and not totem.is_deleted:
+            return totem
+        return None
+    
+# Alterado para filtrar os deletados por padrão
+    def listar_todos(self, include_deleted: bool = False) -> List[Totem]:
+        if not include_deleted:
+            return [t for t in self._dados.values() if not t.is_deleted]
         return list(self._dados.values())
-
+    
+# Alterado para aplicar lógica de Soft Delete
     def deletar(self, totem_id: int) -> None:
-        if totem_id in self._dados:
-            del self._dados[totem_id]
+        totem = self._dados.get(totem_id)
+        if totem:
+            # Marca como deletada e salva
+            totem.is_deleted = True
+            self.salvar(totem)

@@ -30,6 +30,7 @@ class BicicletaResponse(BaseModel):
     ano: str
     numero: int
     status: StatusBicicleta
+    is_deleted: bool
 
 class IntegrarBicicletaRequest(BaseModel):
     idBicicleta: int
@@ -55,6 +56,7 @@ class TrancaResponse(BaseModel):
     modelo: str
     status: StatusTranca
     bicicleta_id: Optional[int] = None
+    is_deleted: bool
 
 class IntegrarTrancaRequest(BaseModel):
     idTranca: int
@@ -78,6 +80,7 @@ class TotemResponse(BaseModel):
     localizacao: str
     descricao: str
     tranca_ids: List[int] = []
+    is_deleted: bool
 
 # ===================================================================
 # Montagem das dependências (Wiring)
@@ -135,8 +138,9 @@ def cadastrar_bicicleta(data: BicicletaCreate):
     return bicicleta
 
 @router.get("/bicicletas", response_model=List[BicicletaResponse], tags=["Bicicletas"])
-def listar_bicicletas():
-    return listar_bicicletas_uc.execute()
+def listar_bicicletas(include_deleted: bool = Query(False, ...)):
+    return listar_bicicletas_uc.execute(include_deleted=include_deleted)
+
 
 @router.get("/bicicletas/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
 def buscar_bicicleta(bicicleta_id: int):
@@ -211,8 +215,8 @@ def cadastrar_tranca(data: TrancaCreate):
     return tranca
 
 @router.get("/trancas", response_model=List[TrancaResponse], tags=["Trancas"])
-def listar_trancas():
-    return listar_trancas_uc.execute()
+def listar_trancas(include_deleted: bool = Query(False, description="Incluir itens deletados na lista")):
+    return listar_trancas_uc.execute(include_deleted=include_deleted)
 
 @router.get("/trancas/{tranca_id}", response_model=TrancaResponse, tags=["Trancas"])
 def buscar_tranca(tranca_id: int):
@@ -325,8 +329,8 @@ def cadastrar_totem(data: TotemCreate):
     return totem
 
 @router.get("/totens", response_model=List[TotemResponse], tags=["Totens"])
-def listar_totens():
-    return listar_totens_uc.execute()
+def listar_totens(include_deleted: bool = Query(False, description="Incluir itens deletados na lista")):
+    return listar_totens_uc.execute(include_deleted=include_deleted)
 
 @router.get("/totens/{totem_id}", response_model=TotemResponse, tags=["Totens"])
 def buscar_totem(totem_id: int):
