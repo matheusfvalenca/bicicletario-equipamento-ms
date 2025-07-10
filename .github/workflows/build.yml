@@ -1,13 +1,22 @@
 name: Build, Test and Analyze
 
 on:
-  # Dispara a análise quando houver um push na branch 'main'
+  name: Build, Test and Analyze
+
+on:
+  # Dispara a análise quando houver um push na branch 'principal'
   push:
     branches:
-      - main
-  # Também dispara em Pull Requests
+      - principal
+  # Também dispara em Pull Requests para a branch 'principal'
   pull_request:
+    branches:
+      - principal
     types: [opened, synchronize, reopened]
+
+jobs:
+  # ... (o resto do arquivo não muda)
+
 
 jobs:
   sonarcloud:
