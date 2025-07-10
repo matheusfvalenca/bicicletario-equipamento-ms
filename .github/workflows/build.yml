@@ -1,3 +1,4 @@
+# Corrigindo o gatilho para a branch principal
 name: Build, Test and Analyze
 
 on:
