@@ -3,11 +3,11 @@ name: Build, Test and Analyze
 on:
   push:
     branches:
-      - principal
+      - main
 
   pull_request:
     branches:
-      - principal
+      - main
     types: [opened, synchronize, reopened]
 
 jobs:
