@@ -1,12 +1,13 @@
 name: Build, Test and Analyze
 
 on:
-  # Dispara a análise quando houver um push na branch 'main'
   push:
     branches:
-      - main
-  # Também dispara em Pull Requests
+      - principal
+
   pull_request:
+    branches:
+      - principal
     types: [opened, synchronize, reopened]
 
 jobs:
