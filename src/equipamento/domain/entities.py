@@ -2,10 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
-
-# Usamos Enums para garantir que os status sejam sempre valores válidos.
-# Isso evita erros de digitação e torna o código mais legível.
+from typing import List, Optional 
 
 class StatusBicicleta(str, Enum):
     DISPONIVEL = "DISPONÍVEL"
@@ -23,19 +20,15 @@ class StatusTranca(str, Enum):
     APOSENTADA = "APOSENTADA"
     EM_REPARO = "EM_REPARO"
 
-# O decorador @dataclass cria automaticamente métodos como __init__, __repr__, etc.
-# Isso nos ajuda a escrever classes de dados concisas.
-
-@dataclass
+@dataclass 
 class Bicicleta:
     marca: str
     modelo: str
     ano: str
     numero: int
-    status: StatusBicicleta
-    # O ID é opcional porque uma bicicleta recém-criada
-    # ainda não tem um ID até ser salva no banco de dados.
+    status: StatusBicicleta 
     id: Optional[int] = None
+    is_deleted: bool = False
 
 @dataclass
 class Tranca:
@@ -47,12 +40,12 @@ class Tranca:
     id: Optional[int] = None
     bicicleta_id: Optional[int] = None
     totem_id: Optional[int] = None
+    is_deleted: bool = False
 
 @dataclass
 class Totem:
     localizacao: str
     descricao: str
-    id: Optional[int] = None
-    # Um totem contém uma lista de IDs de trancas.
-    # Usamos field(default_factory=list) para inicializar uma lista vazia de forma segura.
+    id: Optional[int] = None 
     tranca_ids: List[int] = field(default_factory=list)
+    is_deleted: bool = False
