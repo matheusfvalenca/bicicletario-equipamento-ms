@@ -6,7 +6,7 @@ on:
     branches:
       - main
   # Também dispara em Pull Requests
-  pull_requests:
+  pull_request: 
     types: [opened, synchronize, reopened]
 
 jobs:
