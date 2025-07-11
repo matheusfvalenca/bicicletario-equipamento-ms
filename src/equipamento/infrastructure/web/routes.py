@@ -1,5 +1,7 @@
-from typing import List, Optional 
-from fastapi import APIRouter, HTTPException, status, Query 
+# src/equipamento/infrastructure/web/routes.py
+
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
 
 from ..repositories.mem_repository import (
@@ -43,8 +45,7 @@ from ...domain.entities import StatusBicicleta, StatusTranca
 # Pydantic Models
 # ===================================================================
 
-# --- Modelos para Bicicleta ---
-class BicicletaCreate(BaseModel):
+class BicicletaCreate(BaseModel): 
     marca: str
     modelo: str
     ano: str
@@ -68,8 +69,7 @@ class RetirarBicicletaRequest(BaseModel):
     idTranca: int
     statusAcaoReparador: StatusBicicleta
 
-# --- Modelos para Tranca ---
-class TrancaCreate(BaseModel):
+class TrancaCreate(BaseModel): 
     numero: int
     localizacao: str
     ano_de_fabricacao: str
@@ -97,8 +97,7 @@ class RetirarTrancaRequest(BaseModel):
 class TrancarRequest(BaseModel):
     idBicicleta: int
 
-# --- Modelos para Totem ---
-class TotemCreate(BaseModel):
+class TotemCreate(BaseModel): 
     localizacao: str
     descricao: str
 
@@ -123,8 +122,7 @@ buscar_bicicleta_uc = BuscarBicicletaPorIdUseCase(repository=bicicleta_repo)
 deletar_bicicleta_uc = DeletarBicicletaUseCase(repository=bicicleta_repo)
 integrar_bicicleta_uc = IntegrarBicicletaNaRedeUseCase(bicicleta_repo=bicicleta_repo, tranca_repo=tranca_repo)
 retirar_bicicleta_uc = RetirarBicicletaDaRedeUseCase(bicicleta_repo=bicicleta_repo, tranca_repo=tranca_repo)
-alterar_status_bicicleta_uc = AlterarStatusBicicletaUseCase(repository=bicicleta_repo)
-
+alterar_status_bicicleta_uc = AlterarStatusBicicletaUseCase(repository=bicicleta_repo) 
 
 cadastrar_tranca_uc = CadastrarTrancaUseCase(repository=tranca_repo)
 listar_trancas_uc = ListarTrancasUseCase(repository=tranca_repo)
@@ -179,19 +177,16 @@ def deletar_bicicleta(bicicleta_id: int):
     deletar_bicicleta_uc.execute(bicicleta_id)
 
 @router.post("/bicicletas/integrar-na-rede", response_model=TrancaResponse, tags=["Ações"])
-def integrar_bicicleta_na_rede(data: IntegrarBicicletaRequest): 
+def integrar_bicicleta_na_rede(data: IntegrarBicicletaRequest):
     try:
-        tranca = integrar_bicicleta_uc.execute(
-            bicicleta_id=data.idBicicleta,
-            tranca_id=data.idTranca
-        )
+        tranca = integrar_bicicleta_uc.execute(bicicleta_id=data.idBicicleta, tranca_id=data.idTranca)
         return tranca
-    except ValueError as e: 
+    except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
 @router.post("/bicicletas/retirar-da-rede", response_model=BicicletaResponse, tags=["Ações"])
 def retirar_bicicleta_da_rede(data: RetirarBicicletaRequest):
-    try: 
+    try:
         bicicleta = retirar_bicicleta_uc.execute(
             bicicleta_id=data.idBicicleta,
             tranca_id=data.idTranca,
@@ -203,13 +198,10 @@ def retirar_bicicleta_da_rede(data: RetirarBicicletaRequest):
     
 @router.post("/bicicletas/{bicicleta_id}/status/{novo_status}", response_model=BicicletaResponse, tags=["Bicicletas"])
 def alterar_status_bicicleta(bicicleta_id: int, novo_status: StatusBicicleta):
-    try: 
-        bicicleta = alterar_status_bicicleta_uc.execute(
-            bicicleta_id=bicicleta_id,
-            novo_status=novo_status
-        )
+    try:
+        bicicleta = alterar_status_bicicleta_uc.execute(bicicleta_id=bicicleta_id, novo_status=novo_status)
         return bicicleta
-    except ValueError as e: 
+    except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
 @router.put("/bicicletas/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
@@ -241,27 +233,21 @@ def deletar_tranca(tranca_id: int):
     deletar_tranca_uc.execute(tranca_id)
 
 @router.post("/trancas/{tranca_id}/status/{novo_status}", response_model=TrancaResponse, tags=["Trancas"])
-def alterar_status_tranca(tranca_id: int, novo_status: StatusTranca): 
+def alterar_status_tranca(tranca_id: int, novo_status: StatusTranca):
     try:
-        tranca = alterar_status_tranca_uc.execute(
-            tranca_id=tranca_id,
-            novo_status=novo_status
-        )
+        tranca = alterar_status_tranca_uc.execute(tranca_id=tranca_id, novo_status=novo_status)
         return tranca
     except ValueError as e:
-        if "não encontrada" in str(e): 
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) 
+        if "não encontrada" in str(e):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
 @router.post("/trancas/integrar-na-rede", response_model=TrancaResponse, tags=["Ações"])
 def integrar_tranca_no_totem(data: IntegrarTrancaRequest):
-    try: 
-        tranca = integrar_tranca_uc.execute(
-            tranca_id=data.idTranca,
-            totem_id=data.idTotem
-        )
+    try:
+        tranca = integrar_tranca_uc.execute(tranca_id=data.idTranca, totem_id=data.idTotem)
         return tranca
-    except ValueError as e: 
+    except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
 @router.put("/trancas/{tranca_id}", response_model=TrancaResponse, tags=["Trancas"])
@@ -274,17 +260,17 @@ def atualizar_tranca(tranca_id: int, data: TrancaCreate):
     
 @router.get("/trancas/{tranca_id}/bicicleta", response_model=BicicletaResponse, tags=["Trancas"])
 def buscar_bicicleta_na_tranca(tranca_id: int):
-    try: 
+    try:
         bicicleta = buscar_bicicleta_em_tranca_uc.execute(tranca_id)
-        if not bicicleta: 
+        if not bicicleta:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nenhuma bicicleta encontrada na tranca.")
         return bicicleta
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
 @router.post("/trancas/retirar-da-rede", response_model=TrancaResponse, tags=["Ações"])
 def retirar_tranca_do_totem(data: RetirarTrancaRequest):
-    try: 
+    try:
         tranca = retirar_tranca_uc.execute(
             tranca_id=data.idTranca,
             totem_id=data.idTotem,
@@ -295,15 +281,15 @@ def retirar_tranca_do_totem(data: RetirarTrancaRequest):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
 @router.post("/trancas/{tranca_id}/trancar", response_model=TrancaResponse, tags=["Ações"])
-def trancar_tranca(tranca_id: int, data: TrancarRequest): 
+def trancar_tranca(tranca_id: int, data: TrancarRequest):
     try:
         tranca = trancar_tranca_uc.execute(tranca_id=tranca_id, bicicleta_id=data.idBicicleta)
         return tranca
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
-@router.post("/trancas/{tranca_id}/destrancar", response_model=BicicletaResponse, tags=["Ações"]) 
-def destrancar_tranca(tranca_id: int): 
+@router.post("/trancas/{tranca_id}/destrancar", response_model=BicicletaResponse, tags=["Ações"])
+def destrancar_tranca(tranca_id: int):
     try:
         bicicleta = destrancar_tranca_uc.execute(tranca_id)
         return bicicleta
@@ -331,7 +317,7 @@ def deletar_totem(totem_id: int):
     deletar_totem_uc.execute(totem_id)
 
 @router.get("/totens/{totem_id}/trancas", response_model=List[TrancaResponse], tags=["Totens"])
-def listar_trancas_do_totem(totem_id: int): 
+def listar_trancas_do_totem(totem_id: int):
     try:
         trancas = listar_trancas_por_totem_uc.execute(totem_id)
         return trancas
@@ -347,9 +333,9 @@ def atualizar_totem(totem_id: int, data: TotemCreate):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
 @router.get("/totens/{totem_id}/bicicletas", response_model=List[BicicletaResponse], tags=["Totens"])
-def listar_bicicletas_do_totem(totem_id: int): 
+def listar_bicicletas_do_totem(totem_id: int):
     try:
         bicicletas = listar_bicicletas_por_totem_uc.execute(totem_id)
         return bicicletas
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
