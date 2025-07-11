@@ -9,8 +9,7 @@ from ..repositories.mem_repository import (
     MemTrancaRepository, 
     MemTotemRepository
 )
-# CORREÇÃO: Substituído o wildcard import por importações explícitas
-from ...application.use_cases import (
+from ...application.use_cases import ( 
     CadastrarBicicletaUseCase,
     ListarBicicletasUseCase,
     BuscarBicicletaPorIdUseCase,
@@ -38,8 +37,12 @@ from ...application.use_cases import (
     AtualizarTotemUseCase,
     ListarBicicletasPorTotemUseCase,
 )
-# CORREÇÃO: Importando apenas as entidades necessárias
-from ...domain.entities import StatusBicicleta, StatusTranca
+from ...domain.entities import StatusBicicleta, StatusTranca 
+
+# ===================================================================
+# Constantes
+# ===================================================================
+INCLUDE_DELETED_DESCRIPTION = "Incluir itens deletados na lista"
 
 # ===================================================================
 # Pydantic Models
@@ -163,7 +166,7 @@ def cadastrar_bicicleta(data: BicicletaCreate):
     return bicicleta
 
 @router.get("/bicicletas", response_model=List[BicicletaResponse], tags=["Bicicletas"])
-def listar_bicicletas(include_deleted: bool = Query(False, description="Incluir itens deletados na lista")):
+def listar_bicicletas(include_deleted: bool = Query(False, description=INCLUDE_DELETED_DESCRIPTION)):
     return listar_bicicletas_uc.execute(include_deleted=include_deleted)
 
 @router.get("/bicicletas/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
@@ -219,7 +222,7 @@ def cadastrar_tranca(data: TrancaCreate):
     return tranca
 
 @router.get("/trancas", response_model=List[TrancaResponse], tags=["Trancas"])
-def listar_trancas(include_deleted: bool = Query(False, description="Incluir itens deletados na lista")):
+def listar_trancas(include_deleted: bool = Query(False, description=INCLUDE_DELETED_DESCRIPTION)):
     return listar_trancas_uc.execute(include_deleted=include_deleted)
 
 @router.get("/trancas/{tranca_id}", response_model=TrancaResponse, tags=["Trancas"])
@@ -263,7 +266,7 @@ def buscar_bicicleta_na_tranca(tranca_id: int):
     try:
         bicicleta = buscar_bicicleta_em_tranca_uc.execute(tranca_id)
         if not bicicleta:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nenhuma bicicleta encontrada na tranca.")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Nenhuma bicicleta encontrada na tranca.")
         return bicicleta
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -303,7 +306,7 @@ def cadastrar_totem(data: TotemCreate):
     return totem
 
 @router.get("/totens", response_model=List[TotemResponse], tags=["Totens"])
-def listar_totens(include_deleted: bool = Query(False, description="Incluir itens deletados na lista")):
+def listar_totens(include_deleted: bool = Query(False, description=INCLUDE_DELETED_DESCRIPTION)):
     return listar_totens_uc.execute(include_deleted=include_deleted)
 
 @router.get("/totens/{totem_id}", response_model=TotemResponse, tags=["Totens"])
