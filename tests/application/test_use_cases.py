@@ -4,26 +4,18 @@ from unittest.mock import MagicMock
 import pytest
 
 # Importando o que vamos testar
-from src.equipamento.application.use_cases import CadastrarBicicletaUseCase
-from src.equipamento.domain.entities import Bicicleta, StatusBicicleta
-from src.equipamento.application.repositories import BicicletaRepositoryInterface
-from src.equipamento.application.use_cases import IntegrarBicicletaNaRedeUseCase
-from src.equipamento.application.repositories import TrancaRepositoryInterface
-from src.equipamento.domain.entities import Tranca, StatusTranca
-from src.equipamento.application.use_cases import RetirarBicicletaDaRedeUseCase
-from src.equipamento.application.use_cases import (
-    ListarBicicletasUseCase,
-    BuscarBicicletaPorIdUseCase,
-    DeletarBicicletaUseCase,
-    AtualizarBicicletaUseCase,
-)
-from src.equipamento.application.use_cases import (
-    RetirarTrancaDoTotemUseCase,
-    IntegrarTrancaNoTotemUseCase,
-    TrancarTrancaUseCase,
-    DestrancarTrancaUseCase,
-)
+from src.equipamento.application.use_cases import *
+from src.equipamento.domain.entities import Bicicleta, Tranca, Totem, StatusBicicleta, StatusTranca
+from src.equipamento.application.repositories import BicicletaRepositoryInterface, TrancaRepositoryInterface, TotemRepositoryInterface
 
+# Constantes de erro para facilitar a verificação das mensagens
+ERRO_BICICLETA_NAO_ENCONTRADA = "Bicicleta não encontrada."
+ERRO_TRANCA_NAO_ENCONTRADA = "Tranca não encontrada."
+ERRO_TOTEM_NAO_ENCONTRADO = "Totem não encontrado."
+
+# ###################################################################
+# --- TESTES EXISTENTES (MANTIDOS CONFORME O ORIGINAL) ---
+# ###################################################################
 
 def test_cadastrar_bicicleta_deve_criar_com_status_nova_e_chamar_repositorio():
     # Arrange (Arrumar)
@@ -200,6 +192,7 @@ def test_integrar_bicicleta_na_rede_deve_falhar_se_status_da_bicicleta_invalido(
     # 5. Garante que, como a operação falhou, nada foi salvo
     mock_bicicleta_repo.salvar.assert_not_called()
     mock_tranca_repo.salvar.assert_not_called()
+
 def test_retirar_bicicleta_da_rede_deve_falhar_se_tranca_nao_encontrada():
     # Arrange
     # 1. Criamos os mocks para os repositórios
@@ -387,15 +380,7 @@ def test_atualizar_bicicleta_use_case():
     assert resultado.modelo == "Barra Forte" # Verifica se o campo foi atualizado
     assert resultado.ano == "1980" # Verifica se o campo antigo foi mantido
 
-
-from src.equipamento.application.use_cases import (
-    ListarTrancasUseCase, BuscarTrancaPorIdUseCase, DeletarTrancaUseCase, AtualizarTrancaUseCase,
-    ListarTotensUseCase, BuscarTotemPorIdUseCase, DeletarTotemUseCase, AtualizarTotemUseCase
-)
-from src.equipamento.application.repositories import TotemRepositoryInterface
-from src.equipamento.domain.entities import Totem
-
-def test_atualizar_bicicleta_deve_lancar_erro_se_nao_encontrada():
+def test_atualizar_bicicleta_deve_lancar_erro_se_nao_encontrada(): 
     # Arrange
     # 1. Criamos o mock do repositório
     mock_repo = MagicMock(spec=BicicletaRepositoryInterface)
@@ -647,3 +632,104 @@ def test_atualizar_totem_use_case():
     # Assert
     assert resultado.descricao == "Nova Descrição"
     assert resultado.localizacao == "L1" # Campo não alterado
+
+# ###################################################################
+# --- NOVOS TESTES PARA AUMENTAR A COBERTURA ---
+# ###################################################################
+
+def test_alterar_status_tranca_sucesso():
+    mock_repo = MagicMock(spec=TrancaRepositoryInterface)
+    tranca_existente = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.NOVA)
+    mock_repo.buscar_por_id.return_value = tranca_existente
+    mock_repo.salvar.side_effect = lambda t: t
+    use_case = AlterarStatusTrancaUseCase(repository=mock_repo)
+    resultado = use_case.execute(1, StatusTranca.EM_REPARO)
+    assert resultado.status == StatusTranca.EM_REPARO
+    mock_repo.salvar.assert_called_once()
+
+def test_listar_trancas_por_totem_sucesso():
+    mock_totem_repo = MagicMock(spec=TotemRepositoryInterface)
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_totem_repo.buscar_por_id.return_value = Totem(id=1, localizacao="L", descricao="D")
+    use_case = ListarTrancasPorTotemUseCase(totem_repo=mock_totem_repo, tranca_repo=mock_tranca_repo)
+    use_case.execute(1)
+    mock_tranca_repo.buscar_por_totem_id.assert_called_once_with(1)
+
+def test_integrar_tranca_no_totem_sucesso():
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_totem_repo = MagicMock(spec=TotemRepositoryInterface)
+    tranca_nova = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.NOVA)
+    totem_existente = Totem(id=1, localizacao="L", descricao="D")
+    mock_tranca_repo.buscar_por_id.return_value = tranca_nova
+    mock_totem_repo.buscar_por_id.return_value = totem_existente
+    mock_tranca_repo.salvar.side_effect = lambda t: t
+    use_case = IntegrarTrancaNoTotemUseCase(tranca_repo=mock_tranca_repo, totem_repo=mock_totem_repo)
+    resultado = use_case.execute(1, 1)
+    assert resultado.totem_id == 1
+    assert resultado.status == StatusTranca.LIVRE
+    mock_tranca_repo.salvar.assert_called_once()
+
+def test_buscar_bicicleta_em_tranca_sucesso():
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_bicicleta_repo = MagicMock(spec=BicicletaRepositoryInterface)
+    tranca_ocupada = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.OCUPADA, bicicleta_id=5)
+    bicicleta_esperada = Bicicleta(id=5, marca="T", modelo="T", ano="T", numero=1, status=StatusBicicleta.DISPONIVEL)
+    mock_tranca_repo.buscar_por_id.return_value = tranca_ocupada
+    mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_esperada
+    use_case = BuscarBicicletaEmTrancaUseCase(tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
+    resultado = use_case.execute(1)
+    assert resultado == bicicleta_esperada
+
+def test_listar_bicicletas_por_totem_sucesso():
+    mock_totem_repo = MagicMock(spec=TotemRepositoryInterface)
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_bicicleta_repo = MagicMock(spec=BicicletaRepositoryInterface)
+    totem_existente = Totem(id=1, localizacao="L", descricao="D")
+    trancas_no_totem = [
+        Tranca(id=10, bicicleta_id=100, status=StatusTranca.OCUPADA, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M"),
+        Tranca(id=11, bicicleta_id=101, status=StatusTranca.OCUPADA, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M")
+    ]
+    mock_totem_repo.buscar_por_id.return_value = totem_existente
+    mock_tranca_repo.buscar_por_totem_id.return_value = trancas_no_totem
+    use_case = ListarBicicletasPorTotemUseCase(totem_repo=mock_totem_repo, tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
+    use_case.execute(1)
+    mock_bicicleta_repo.buscar_por_ids.assert_called_once_with([100, 101])
+
+def test_retirar_tranca_do_totem_sucesso():
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_totem_repo = MagicMock(spec=TotemRepositoryInterface)
+    tranca_existente = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.LIVRE, totem_id=1)
+    totem_existente = Totem(id=1, localizacao="L", descricao="D")
+    mock_tranca_repo.buscar_por_id.return_value = tranca_existente
+    mock_totem_repo.buscar_por_id.return_value = totem_existente
+    mock_tranca_repo.salvar.side_effect = lambda t: t
+    use_case = RetirarTrancaDoTotemUseCase(tranca_repo=mock_tranca_repo, totem_repo=mock_totem_repo)
+    resultado = use_case.execute(1, 1, StatusTranca.APOSENTADA)
+    assert resultado.status == StatusTranca.APOSENTADA
+    assert resultado.totem_id is None
+
+def test_trancar_tranca_sucesso():
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_bicicleta_repo = MagicMock(spec=BicicletaRepositoryInterface)
+    bicicleta_em_uso = Bicicleta(id=1, marca="T", modelo="T", ano="T", numero=1, status=StatusBicicleta.EM_USO)
+    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.LIVRE)
+    mock_tranca_repo.buscar_por_id.return_value = tranca_livre
+    mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_em_uso
+    mock_tranca_repo.salvar.side_effect = lambda t: t
+    use_case = TrancarTrancaUseCase(tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
+    resultado = use_case.execute(1, 1)
+    assert resultado.status == StatusTranca.OCUPADA
+    assert bicicleta_em_uso.status == StatusBicicleta.DISPONIVEL
+
+def test_destrancar_tranca_sucesso():
+    mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
+    mock_bicicleta_repo = MagicMock(spec=BicicletaRepositoryInterface)
+    bicicleta_na_tranca = Bicicleta(id=1, marca="T", modelo="T", ano="T", numero=1, status=StatusBicicleta.DISPONIVEL)
+    tranca_ocupada = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.OCUPADA, bicicleta_id=1)
+    mock_tranca_repo.buscar_por_id.return_value = tranca_ocupada
+    mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_na_tranca
+    mock_bicicleta_repo.salvar.side_effect = lambda b: b
+    use_case = DestrancarTrancaUseCase(tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
+    resultado = use_case.execute(1)
+    assert resultado.status == StatusBicicleta.EM_USO
+    assert tranca_ocupada.status == StatusTranca.LIVRE
