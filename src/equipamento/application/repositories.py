@@ -22,8 +22,8 @@ class BicicletaRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def listar_todas(self) -> List[Bicicleta]:
-        """Lista todas as bicicletas cadastradas."""
+    def listar_todas(self, include_deleted: bool = False) -> List[Bicicleta]:
+        """Lista todas as bicicletas, com opção de incluir as deletadas."""
         pass
     
     @abstractmethod
@@ -51,8 +51,8 @@ class TrancaRepositoryInterface(ABC):
         pass
     
     @abstractmethod
-    def listar_todas(self) -> List[Tranca]:
-        """Lista todas as trancas cadastradas."""
+    def listar_todas(self, include_deleted: bool = False) -> List[Tranca]:
+        """Lista todas as trancas, com opção de incluir as deletadas."""
         pass
 
     @abstractmethod
@@ -80,8 +80,8 @@ class TotemRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def listar_todos(self) -> List[Totem]:
-        """Lista todos os totens cadastrados."""
+    def listar_todos(self, include_deleted: bool = False) -> List[Totem]:
+        """Lista todos os totens, com opção de incluir os deletados."""
         pass
 
     @abstractmethod
