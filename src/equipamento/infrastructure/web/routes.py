@@ -310,7 +310,7 @@ def retirar_tranca_do_totem(data: RetirarTrancaRequest):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
-@router.post("/trancas/{idTranca}/trancar", response_model=TrancaResponse, tags=["Ações"])
+@router.post("/tranca/{idTranca}/trancar", response_model=TrancaResponse, tags=["Ações"])
 def trancar_tranca(idTranca: int, data: AcaoBicicletaRequest):
     try:
         tranca = trancar_tranca_uc.execute(tranca_id=idTranca, bicicleta_id=data.bicicleta)
