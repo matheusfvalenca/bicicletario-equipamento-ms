@@ -3,6 +3,7 @@
 from fastapi.testclient import TestClient
 # Importamos o 'app' principal da nossa aplicação
 from main import app 
+from src.equipamento.domain.entities import StatusBicicleta, StatusTranca
 
 # Criamos uma instância do TestClient, passando nosso app FastAPI para ele
 client = TestClient(app)
@@ -23,6 +24,8 @@ def test_criar_bicicleta_api_deve_retornar_status_201_e_dados_corretos():
     assert response.status_code == 201
     data = response.json()
     assert data["marca"] == payload["marca"]
+    assert data["modelo"] == payload["modelo"]
+    assert data["numero"] == payload["numero"]
     assert data["status"] == "NOVA"
     assert "id" in data
     assert "is_deleted" in data
@@ -41,6 +44,7 @@ def test_listar_bicicletas_api():
     assert response.status_code == 200
     assert isinstance(data, list)
     assert len(data) >= 2
+    assert data[-1]["marca"] == "B" # Verificamos o último item adicionado
 
 def test_buscar_bicicleta_por_id_api_encontrado():
     # Arrange
@@ -62,6 +66,7 @@ def test_buscar_bicicleta_por_id_api_nao_encontrado():
 
     # Assert
     assert response.status_code == 404 
+    assert response.json()["detail"] == "Bicicleta não encontrada."
 
 def test_atualizar_bicicleta_api():
     # Arrange
@@ -79,6 +84,8 @@ def test_atualizar_bicicleta_api():
     assert response_put.status_code == 200
     assert data["id"] == new_id
     assert data["marca"] == "Nova" 
+    assert data["modelo"] == "Novo"
+    assert data["numero"] == 5
 
 def test_deletar_bicicleta_api():
     # Arrange
@@ -88,7 +95,7 @@ def test_deletar_bicicleta_api():
 
     # Act
     response_delete = client.delete(f"/api/bicicletas/{new_id}")
-
+    
     # Assert
     assert response_delete.status_code == 204
     assert client.get(f"/api/bicicletas/{new_id}").status_code == 404 
@@ -248,7 +255,7 @@ def test_integrar_bicicleta_na_rede_api():
     id_tranca = client.post("/api/trancas", json=tranca_payload).json()["id"]
 
     # Ativa a tranca, mudando seu status de NOVA para LIVRE
-    client.post(f"/api/trancas/{id_tranca}/status/LIVRE")
+    client.post(f"/api/trancas/{id_tranca}/status/{StatusTranca.LIVRE.value}")
 
     integracao_payload = {"idBicicleta": id_bicicleta, "idTranca": id_tranca}
 
@@ -269,7 +276,7 @@ def test_destrancar_e_trancar_api_ciclo_completo():
     id_tranca = client.post("/api/trancas", json=tranca_payload).json()["id"]
 
     # Ativa a tranca antes de usá-la
-    client.post(f"/api/trancas/{id_tranca}/status/LIVRE")
+    client.post(f"/api/trancas/{id_tranca}/status/{StatusTranca.LIVRE.value}")
     
     # Agora integramos a bicicleta na tranca já ativada
     client.post("/api/bicicletas/integrar-na-rede", json={"idBicicleta": id_bicicleta, "idTranca": id_tranca})
@@ -278,11 +285,11 @@ def test_destrancar_e_trancar_api_ciclo_completo():
     
     # Act
     response_destrancar = client.post(f"/api/trancas/{id_tranca}/destrancar")
-    data_bike_liberada = response_destrancar.json()
+    data_tranca_liberada = response_destrancar.json()
 
     # Assert
     assert response_destrancar.status_code == 200
-    assert data_bike_liberada["status"] == "EM_USO"
+    assert data_tranca_liberada["status"] == "LIVRE"
 
     # Verificação de estado
     tranca_depois_de_destrancar = client.get(f"/api/trancas/{id_tranca}").json()
