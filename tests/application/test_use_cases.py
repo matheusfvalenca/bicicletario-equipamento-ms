@@ -532,7 +532,7 @@ def test_integrar_tranca_no_totem_deve_falhar_se_tranca_ja_integrada():
 
     # Act & Assert
     with pytest.raises(ValueError, match="Tranca já está integrada ao totem 5."):
-        use_case.execute(tranca_id=1, totem_id=1)
+        use_case.execute(tranca_id=1, totem_id=1, funcionario_id=123) # CORREÇÃO: Adicionado funcionario_id
     
 def test_trancar_tranca_deve_falhar_se_tranca_nao_esta_livre():
     # Arrange
@@ -698,7 +698,7 @@ def test_listar_bicicletas_por_totem_sucesso():
 def test_retirar_tranca_do_totem_sucesso():
     mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
     mock_totem_repo = MagicMock(spec=TotemRepositoryInterface)
-    tranca_existente = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.LIVRE, totem_id=1)
+    tranca_existente = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.REPARO_SOLICITADO, totem_id=1)
     totem_existente = Totem(id=1, localizacao="L", descricao="D")
     mock_tranca_repo.buscar_por_id.return_value = tranca_existente
     mock_totem_repo.buscar_por_id.return_value = totem_existente
@@ -728,8 +728,8 @@ def test_destrancar_tranca_sucesso():
     tranca_ocupada = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.OCUPADA, bicicleta_id=1)
     mock_tranca_repo.buscar_por_id.return_value = tranca_ocupada
     mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_na_tranca
-    mock_bicicleta_repo.salvar.side_effect = lambda b: b
+    mock_tranca_repo.salvar.side_effect = lambda t: t
     use_case = DestrancarTrancaUseCase(tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
     resultado = use_case.execute(1)
-    assert resultado.status == StatusBicicleta.EM_USO
-    assert tranca_ocupada.status == StatusTranca.LIVRE
+    assert resultado.status == StatusTranca.LIVRE
+    assert bicicleta_na_tranca.status == StatusBicicleta.EM_USO
