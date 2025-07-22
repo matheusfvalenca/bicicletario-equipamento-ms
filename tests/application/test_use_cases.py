@@ -664,7 +664,7 @@ def test_integrar_tranca_no_totem_sucesso():
     mock_totem_repo.buscar_por_id.return_value = totem_existente
     mock_tranca_repo.salvar.side_effect = lambda t: t
     use_case = IntegrarTrancaNoTotemUseCase(tranca_repo=mock_tranca_repo, totem_repo=mock_totem_repo)
-    resultado = use_case.execute(1, 1)
+    resultado = use_case.execute(1, 1, funcionario_id=123)
     assert resultado.totem_id == 1
     assert resultado.status == StatusTranca.LIVRE
     mock_tranca_repo.salvar.assert_called_once()
