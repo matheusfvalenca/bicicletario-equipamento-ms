@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any 
 
 from ..domain.entities import Bicicleta, Tranca, Totem, StatusBicicleta, StatusTranca
 from .repositories import (
@@ -10,7 +10,7 @@ from .repositories import (
 # ======================================================
 # --- Constantes de Mensagens de Erro ---
 # ======================================================
-ERRO_BICICLETA_NAO_ENCONTRADA = "Bicicleta não encontrada."
+ERRO_BICICLETA_NAO_ENCONTRADA = "Bicicleta não encontrada." 
 ERRO_TRANCA_NAO_ENCONTRADA = "Tranca não encontrada."
 ERRO_TOTEM_NAO_ENCONTRADO = "Totem não encontrado."
 
@@ -193,7 +193,7 @@ class IntegrarTrancaNoTotemUseCase:
         self.tranca_repo = tranca_repo
         self.totem_repo = totem_repo
 
-    def execute(self, tranca_id: int, totem_id: int) -> Tranca:
+    def execute(self, tranca_id: int, totem_id: int, funcionario_id: int) -> Tranca:
         tranca = self.tranca_repo.buscar_por_id(tranca_id)
         totem = self.totem_repo.buscar_por_id(totem_id)
 
@@ -356,6 +356,10 @@ class RetirarTrancaDoTotemUseCase:
 
         if tranca.totem_id != totem.id:
             raise ValueError("Tranca não pertence ao totem informado.")
+        
+        # NOVA REGRA: A tranca deve ter o status REPARO_SOLICITADO
+        if tranca.status != StatusTranca.REPARO_SOLICITADO:
+            raise ValueError("Ação negada. Apenas trancas com status 'REPARO_SOLICITADO' podem ser retiradas.")
 
         if tranca.status == StatusTranca.OCUPADA:
             raise ValueError("Não é possível retirar uma tranca que está ocupada por uma bicicleta.")
@@ -399,7 +403,7 @@ class DestrancarTrancaUseCase:
         self.tranca_repo = tranca_repo
         self.bicicleta_repo = bicicleta_repo
 
-    def execute(self, tranca_id: int) -> Bicicleta:
+    def execute(self, tranca_id: int) -> Tranca:
         tranca = self.tranca_repo.buscar_por_id(tranca_id)
 
         if not tranca: raise ValueError(ERRO_TRANCA_NAO_ENCONTRADA)
@@ -417,6 +421,21 @@ class DestrancarTrancaUseCase:
         tranca.bicicleta_id = None
         bicicleta.status = StatusBicicleta.EM_USO
 
-        self.tranca_repo.salvar(tranca)
-        return self.bicicleta_repo.salvar(bicicleta)
-                
+        self.bicicleta_repo.salvar(bicicleta)
+        return self.tranca_repo.salvar(tranca)
+    
+class RestaurarDadosUseCase:
+    """
+    Caso de uso para restaurar todos os dados da aplicação para o estado inicial.
+    """
+    def __init__(self, bicicleta_repo: BicicletaRepositoryInterface, tranca_repo: TrancaRepositoryInterface, totem_repo: TotemRepositoryInterface):
+        self.bicicleta_repo = bicicleta_repo
+        self.tranca_repo = tranca_repo
+        self.totem_repo = totem_repo
+
+    def execute(self) -> None:
+        # A ordem é importante: primeiro os independentes (Totem, Bicicleta), depois os dependentes (Tranca)
+        self.totem_repo.restaurar_para_estado_inicial()
+        self.bicicleta_repo.restaurar_para_estado_inicial()
+        self.tranca_repo.restaurar_para_estado_inicial()
+

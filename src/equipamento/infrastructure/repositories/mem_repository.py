@@ -9,7 +9,7 @@ from ...application.repositories import (
     TotemRepositoryInterface,
 )
 # Importando as entidades que vamos armazenar
-from ...domain.entities import Bicicleta, Tranca, Totem
+from ...domain.entities import Bicicleta, Tranca, Totem, StatusBicicleta, StatusTranca
 
 
 class MemBicicletaRepository(BicicletaRepositoryInterface):
@@ -55,6 +55,17 @@ class MemBicicletaRepository(BicicletaRepositoryInterface):
             if bicicleta_id in bicicleta_ids and not bicicleta.is_deleted
         ]
 
+    def restaurar_para_estado_inicial(self):
+        """Limpa todos os dados e recria um estado inicial para testes."""
+        self._dados.clear()
+        self._proximo_id = 1
+        
+        # Adiciona bicicletas iniciais
+        bicicleta1 = Bicicleta(id=1, marca="Caloi", modelo="Ceci", ano="1992", numero=100, status=StatusBicicleta.DISPONIVEL)
+        bicicleta2 = Bicicleta(id=2, marca="Monark", modelo="Barra Forte", ano="1985", numero=200, status=StatusBicicleta.DISPONIVEL)
+        
+        self.salvar(bicicleta1)
+        self.salvar(bicicleta2)
 
 class MemTrancaRepository(TrancaRepositoryInterface):
     """Implementação em memória do repositório de trancas."""
@@ -95,6 +106,18 @@ class MemTrancaRepository(TrancaRepositoryInterface):
             if tranca.totem_id == totem_id and not tranca.is_deleted
         ]
 
+    def restaurar_para_estado_inicial(self):
+        self._dados.clear()
+        self._proximo_id = 1
+
+        # Adiciona trancas iniciais (associadas aos totens e bicicletas)
+        tranca1 = Tranca(id=1, numero=10, localizacao="Totem 1", ano_de_fabricacao="2022", modelo="T1", status=StatusTranca.OCUPADA, bicicleta_id=1, totem_id=1)
+        tranca2 = Tranca(id=2, numero=20, localizacao="Totem 1", ano_de_fabricacao="2022", modelo="T1", status=StatusTranca.LIVRE, totem_id=1)
+        tranca3 = Tranca(id=3, numero=30, localizacao="Totem 2", ano_de_fabricacao="2023", modelo="T2", status=StatusTranca.OCUPADA, bicicleta_id=2, totem_id=2)
+        
+        self.salvar(tranca1)
+        self.salvar(tranca2)
+        self.salvar(tranca3)
 
 class MemTotemRepository(TotemRepositoryInterface):
     """Implementação em memória do repositório de totens."""
@@ -126,3 +149,14 @@ class MemTotemRepository(TotemRepositoryInterface):
         if totem:
             totem.is_deleted = True
             self.salvar(totem)
+
+    def restaurar_para_estado_inicial(self):
+        self._dados.clear()
+        self._proximo_id = 1
+
+        # Adiciona totens iniciais
+        totem1 = Totem(id=1, localizacao="Praça Central", descricao="Totem perto do chafariz")
+        totem2 = Totem(id=2, localizacao="Parque da Cidade", descricao="Totem na entrada principal")
+
+        self.salvar(totem1)
+        self.salvar(totem2)

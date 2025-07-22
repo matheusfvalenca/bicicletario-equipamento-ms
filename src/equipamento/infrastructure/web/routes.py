@@ -36,6 +36,7 @@ from ...application.use_cases import (
     DeletarTotemUseCase,
     AtualizarTotemUseCase,
     ListarBicicletasPorTotemUseCase,
+    RestaurarDadosUseCase,
 )
 from ...domain.entities import StatusBicicleta, StatusTranca 
 
@@ -91,14 +92,15 @@ class TrancaResponse(BaseModel):
 class IntegrarTrancaRequest(BaseModel):
     idTranca: int
     idTotem: int
+    idFuncionario: int
 
 class RetirarTrancaRequest(BaseModel):
     idTranca: int
     idTotem: int
     statusAcaoReparador: StatusTranca
 
-class TrancarRequest(BaseModel):
-    idBicicleta: int
+class AcaoBicicletaRequest(BaseModel):
+    bicicleta: int
 
 class TotemCreate(BaseModel): 
     localizacao: str
@@ -147,6 +149,12 @@ listar_bicicletas_por_totem_uc = ListarBicicletasPorTotemUseCase(
     totem_repo=totem_repo,
     tranca_repo=tranca_repo,
     bicicleta_repo=bicicleta_repo
+)
+
+restaurar_dados_uc = RestaurarDadosUseCase(
+    bicicleta_repo=bicicleta_repo,
+    tranca_repo=tranca_repo,
+    totem_repo=totem_repo
 )
 
 atualizar_bicicleta_uc = AtualizarBicicletaUseCase(repository=bicicleta_repo)
@@ -199,13 +207,24 @@ def retirar_bicicleta_da_rede(data: RetirarBicicletaRequest):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
-@router.post("/bicicletas/{bicicleta_id}/status/{novo_status}", response_model=BicicletaResponse, tags=["Bicicletas"])
-def alterar_status_bicicleta(bicicleta_id: int, novo_status: StatusBicicleta):
+@router.post("/bicicleta/{idBicicleta}/status/{acao}", response_model=BicicletaResponse, tags=["Bicicletas"])
+def alterar_status_bicicleta(idBicicleta: int, acao: StatusBicicleta):
+    """
+    Altera o status de uma bicicleta específica.
+    """
     try:
-        bicicleta = alterar_status_bicicleta_uc.execute(bicicleta_id=bicicleta_id, novo_status=novo_status)
+        bicicleta = alterar_status_bicicleta_uc.execute(
+            bicicleta_id=idBicicleta,
+            novo_status=acao
+        )
         return bicicleta
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        # Retorna 404 se a bicicleta não for encontrada
+        if "não encontrada" in str(e):
+             raise HTTPException(status_code=404, detail={"codigo": "NAO_ENCONTRADO", "mensagem": str(e)})
+        # Retorna 422 para outras violações de regras de negócio
+        raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
+
     
 @router.put("/bicicletas/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
 def atualizar_bicicleta(bicicleta_id: int, data: BicicletaCreate):
@@ -245,14 +264,22 @@ def alterar_status_tranca(tranca_id: int, novo_status: StatusTranca):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
-@router.post("/trancas/integrar-na-rede", response_model=TrancaResponse, tags=["Ações"])
-def integrar_tranca_no_totem(data: IntegrarTrancaRequest):
+@router.post("/tranca/integrarNaRede", response_model=TrancaResponse, tags=["Ações"])
+def integrar_tranca_na_rede(data: IntegrarTrancaRequest):
+    """
+    Coloca uma tranca nova ou retornando de reparo de volta na rede de totens.
+    """
     try:
-        tranca = integrar_tranca_uc.execute(tranca_id=data.idTranca, totem_id=data.idTotem)
+        # O idFuncionario é recebido mas não utilizado na lógica atual deste microsserviço.
+        tranca = integrar_tranca_uc.execute(
+            tranca_id=data.idTranca,
+            totem_id=data.idTotem,
+            funcionario_id=data.idFuncionario
+        )
         return tranca
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
-    
+        raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
+
 @router.put("/trancas/{tranca_id}", response_model=TrancaResponse, tags=["Trancas"])
 def atualizar_tranca(tranca_id: int, data: TrancaCreate):
     try:
@@ -283,21 +310,26 @@ def retirar_tranca_do_totem(data: RetirarTrancaRequest):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
-@router.post("/trancas/{tranca_id}/trancar", response_model=TrancaResponse, tags=["Ações"])
-def trancar_tranca(tranca_id: int, data: TrancarRequest):
+@router.post("/trancas/{idTranca}/trancar", response_model=TrancaResponse, tags=["Ações"])
+def trancar_tranca(idTranca: int, data: AcaoBicicletaRequest):
     try:
-        tranca = trancar_tranca_uc.execute(tranca_id=tranca_id, bicicleta_id=data.idBicicleta)
+        tranca = trancar_tranca_uc.execute(tranca_id=idTranca, bicicleta_id=data.bicicleta)
         return tranca
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
 
-@router.post("/trancas/{tranca_id}/destrancar", response_model=BicicletaResponse, tags=["Ações"])
-def destrancar_tranca(tranca_id: int):
+
+@router.post("/trancas/{idTranca}/destrancar", response_model=BicicletaResponse, tags=["Ações"])
+def destrancar_tranca(idTranca: int, data: Optional[AcaoBicicletaRequest] = None):
+    """
+    Realiza o destrancamento de uma bicicleta de uma tranca.
+    O corpo da requisição é opcional e não é utilizado pela lógica.
+    """
     try:
-        bicicleta = destrancar_tranca_uc.execute(tranca_id)
-        return bicicleta
+        tranca = destrancar_tranca_uc.execute(tranca_id=idTranca)
+        return tranca
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
 
 # --- Rotas para Totens ---
 @router.post("/totens", response_model=TotemResponse, status_code=status.HTTP_201_CREATED, tags=["Totens"])
@@ -342,3 +374,36 @@ def listar_bicicletas_do_totem(totem_id: int):
         return bicicletas
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+@router.post("/trancas/{idTranca}/status/{acao}", response_model=TrancaResponse, tags=["Trancas"])
+def alterar_status_tranca(idTranca: int, acao: StatusTranca):
+    """
+    Altera o status de uma tranca (ex: para NOVA, EM_REPARO, APOSENTADA).
+    """
+    try:
+        tranca = alterar_status_tranca_uc.execute(
+            tranca_id=idTranca,
+            novo_status=acao
+        )
+        return tranca
+    except ValueError as e:
+        if "não encontrada" in str(e):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    
+    
+@router.get("/restaurarDados", status_code=status.HTTP_200_OK, tags=["Testes"])
+def restaurar_dados():
+    """
+    Restaura a base de dados em memória para o estado inicial predefinido.
+    Útil para garantir um estado limpo antes de executar testes automatizados.
+    """
+    try:
+        restaurar_dados_uc.execute()
+        return {"message": "Dados restaurados para o estado inicial com sucesso."}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ocorreu um erro ao restaurar os dados: {e}"
+        )
+
