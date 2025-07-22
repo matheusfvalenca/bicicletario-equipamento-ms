@@ -319,7 +319,7 @@ def trancar_tranca(idTranca: int, data: AcaoBicicletaRequest):
         raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
 
 
-@router.post("/trancas/{idTranca}/destrancar", response_model=BicicletaResponse, tags=["Ações"])
+@router.post("/tranca/{idTranca}/destrancar", response_model=TrancaResponse, tags=["Ações"])
 def destrancar_tranca(idTranca: int, data: Optional[AcaoBicicletaRequest] = None):
     """
     Realiza o destrancamento de uma bicicleta de uma tranca.
