@@ -168,26 +168,26 @@ router = APIRouter()
 # ===================================================================
 
 # --- Rotas para Bicicletas ---
-@router.post("/bicicletas", response_model=BicicletaResponse, status_code=status.HTTP_201_CREATED, tags=["Bicicletas"])
+@router.post("/bicicleta", response_model=BicicletaResponse, status_code=status.HTTP_201_CREATED, tags=["Bicicletas"])
 def cadastrar_bicicleta(data: BicicletaCreate):
     bicicleta = cadastrar_bicicleta_uc.execute(data.model_dump())
     return bicicleta
 
-@router.get("/bicicletas", response_model=List[BicicletaResponse], tags=["Bicicletas"])
+@router.get("/bicicleta", response_model=List[BicicletaResponse], tags=["Bicicletas"])
 def listar_bicicletas(include_deleted: bool = Query(False, description=INCLUDE_DELETED_DESCRIPTION)):
     return listar_bicicletas_uc.execute(include_deleted=include_deleted)
 
-@router.get("/bicicletas/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
+@router.get("/bicicleta/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
 def buscar_bicicleta(bicicleta_id: int):
     bicicleta = buscar_bicicleta_uc.execute(bicicleta_id)
     if not bicicleta: raise HTTPException(status.HTTP_404_NOT_FOUND, "Bicicleta não encontrada.")
     return bicicleta
 
-@router.delete("/bicicletas/{bicicleta_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Bicicletas"])
+@router.delete("/bicicleta/{bicicleta_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Bicicletas"])
 def deletar_bicicleta(bicicleta_id: int):
     deletar_bicicleta_uc.execute(bicicleta_id)
 
-@router.post("/bicicletas/integrar-na-rede", response_model=TrancaResponse, tags=["Ações"])
+@router.post("/bicicleta/integrar-na-rede", response_model=TrancaResponse, tags=["Ações"])
 def integrar_bicicleta_na_rede(data: IntegrarBicicletaRequest):
     try:
         tranca = integrar_bicicleta_uc.execute(bicicleta_id=data.idBicicleta, tranca_id=data.idTranca)
@@ -195,7 +195,7 @@ def integrar_bicicleta_na_rede(data: IntegrarBicicletaRequest):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
-@router.post("/bicicletas/retirar-da-rede", response_model=BicicletaResponse, tags=["Ações"])
+@router.post("/bicicleta/retirarDaRede", response_model=BicicletaResponse, tags=["Ações"])
 def retirar_bicicleta_da_rede(data: RetirarBicicletaRequest):
     try:
         bicicleta = retirar_bicicleta_uc.execute(
@@ -226,38 +226,38 @@ def alterar_status_bicicleta(idBicicleta: int, acao: StatusBicicleta):
         raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
 
     
-@router.put("/bicicletas/{bicicleta_id}", response_model=BicicletaResponse, tags=["Bicicletas"])
-def atualizar_bicicleta(bicicleta_id: int, data: BicicletaCreate):
+@router.put("/bicicleta/{idBicicleta}", response_model=BicicletaResponse, tags=["Bicicletas"])
+def atualizar_bicicleta(idBicicleta: int, data: BicicletaCreate):
     try:
-        bicicleta = atualizar_bicicleta_uc.execute(bicicleta_id, data.model_dump())
+        bicicleta = atualizar_bicicleta_uc.execute(idBicicleta, data.model_dump())
         return bicicleta
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 # --- Rotas para Trancas ---
-@router.post("/trancas", response_model=TrancaResponse, status_code=status.HTTP_201_CREATED, tags=["Trancas"])
+@router.post("/tranca", response_model=TrancaResponse, status_code=status.HTTP_201_CREATED, tags=["Trancas"])
 def cadastrar_tranca(data: TrancaCreate):
     tranca = cadastrar_tranca_uc.execute(data.model_dump())
     return tranca
 
-@router.get("/trancas", response_model=List[TrancaResponse], tags=["Trancas"])
+@router.get("/tranca", response_model=List[TrancaResponse], tags=["Trancas"])
 def listar_trancas(include_deleted: bool = Query(False, description=INCLUDE_DELETED_DESCRIPTION)):
     return listar_trancas_uc.execute(include_deleted=include_deleted)
 
-@router.get("/trancas/{tranca_id}", response_model=TrancaResponse, tags=["Trancas"])
-def buscar_tranca(tranca_id: int):
-    tranca = buscar_tranca_uc.execute(tranca_id)
+@router.get("/tranca/{idTranca}", response_model=TrancaResponse, tags=["Trancas"])
+def buscar_tranca(idTranca: int):
+    tranca = buscar_tranca_uc.execute(idTranca)
     if not tranca: raise HTTPException(status.HTTP_404_NOT_FOUND, "Tranca não encontrada")
     return tranca
 
-@router.delete("/trancas/{tranca_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Trancas"])
-def deletar_tranca(tranca_id: int):
-    deletar_tranca_uc.execute(tranca_id)
+@router.delete("/tranca/{idTranca}", status_code=status.HTTP_204_NO_CONTENT, tags=["Trancas"])
+def deletar_tranca(idTranca: int):
+    deletar_tranca_uc.execute(idTranca)
 
-@router.post("/trancas/{tranca_id}/status/{novo_status}", response_model=TrancaResponse, tags=["Trancas"])
-def alterar_status_tranca(tranca_id: int, novo_status: StatusTranca):
+@router.post("/tranca/{idTranca}/status/{acao}", response_model=TrancaResponse, tags=["Trancas"])
+def alterar_status_tranca(idTranca: int, acao: StatusTranca):
     try:
-        tranca = alterar_status_tranca_uc.execute(tranca_id=tranca_id, novo_status=novo_status)
+        tranca = alterar_status_tranca_uc.execute(idTranca=idTranca, novo_status=acao)
         return tranca
     except ValueError as e:
         if "não encontrada" in str(e):
@@ -280,25 +280,25 @@ def integrar_tranca_na_rede(data: IntegrarTrancaRequest):
     except ValueError as e:
         raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
 
-@router.put("/trancas/{tranca_id}", response_model=TrancaResponse, tags=["Trancas"])
-def atualizar_tranca(tranca_id: int, data: TrancaCreate):
+@router.put("/tranca/{idTranca}", response_model=TrancaResponse, tags=["Trancas"])
+def atualizar_tranca(idTranca: int, data: TrancaCreate):
     try:
-        tranca = atualizar_tranca_uc.execute(tranca_id, data.model_dump())
+        tranca = atualizar_tranca_uc.execute(idTranca, data.model_dump())
         return tranca
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
-@router.get("/trancas/{tranca_id}/bicicleta", response_model=BicicletaResponse, tags=["Trancas"])
-def buscar_bicicleta_na_tranca(tranca_id: int):
+@router.get("/tranca/{idTranca}/bicicleta", response_model=BicicletaResponse, tags=["Trancas"])
+def buscar_bicicleta_na_tranca(idTranca: int):
     try:
-        bicicleta = buscar_bicicleta_em_tranca_uc.execute(tranca_id)
+        bicicleta = buscar_bicicleta_em_tranca_uc.execute(idTranca)
         if not bicicleta:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Nenhuma bicicleta encontrada na tranca.")
         return bicicleta
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
-@router.post("/trancas/retirar-da-rede", response_model=TrancaResponse, tags=["Ações"])
+@router.post("/tranca/retirarDaRede", response_model=TrancaResponse, tags=["Ações"])
 def retirar_tranca_do_totem(data: RetirarTrancaRequest):
     try:
         tranca = retirar_tranca_uc.execute(
@@ -332,50 +332,50 @@ def destrancar_tranca(idTranca: int, data: Optional[AcaoBicicletaRequest] = None
         raise HTTPException(status_code=422, detail={"codigo": "DADOS_INVALIDOS", "mensagem": str(e)})
 
 # --- Rotas para Totens ---
-@router.post("/totens", response_model=TotemResponse, status_code=status.HTTP_201_CREATED, tags=["Totens"])
+@router.post("/totem", response_model=TotemResponse, status_code=status.HTTP_201_CREATED, tags=["Totens"])
 def cadastrar_totem(data: TotemCreate):
     totem = cadastrar_totem_uc.execute(data.model_dump())
     return totem
 
-@router.get("/totens", response_model=List[TotemResponse], tags=["Totens"])
+@router.get("/totem", response_model=List[TotemResponse], tags=["Totens"])
 def listar_totens(include_deleted: bool = Query(False, description=INCLUDE_DELETED_DESCRIPTION)):
     return listar_totens_uc.execute(include_deleted=include_deleted)
 
-@router.get("/totens/{totem_id}", response_model=TotemResponse, tags=["Totens"])
-def buscar_totem(totem_id: int):
-    totem = buscar_totem_uc.execute(totem_id)
+@router.get("/totem/{idTotem}", response_model=TotemResponse, tags=["Totens"])
+def buscar_totem(idTotem: int):
+    totem = buscar_totem_uc.execute(idTotem)
     if not totem: raise HTTPException(status.HTTP_404_NOT_FOUND, "Totem não encontrado")
     return totem
 
-@router.delete("/totens/{totem_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Totens"])
-def deletar_totem(totem_id: int):
-    deletar_totem_uc.execute(totem_id)
+@router.delete("/totem/{idTotem}", status_code=status.HTTP_204_NO_CONTENT, tags=["Totens"])
+def deletar_totem(idTotem: int):
+    deletar_totem_uc.execute(idTotem)
 
-@router.get("/totens/{totem_id}/trancas", response_model=List[TrancaResponse], tags=["Totens"])
-def listar_trancas_do_totem(totem_id: int):
+@router.get("/totem/{idTotem}/trancas", response_model=List[TrancaResponse], tags=["Totens"])
+def listar_trancas_do_totem(idTotem: int):
     try:
-        trancas = listar_trancas_por_totem_uc.execute(totem_id)
+        trancas = listar_trancas_por_totem_uc.execute(idTotem)
         return trancas
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
-@router.put("/totens/{totem_id}", response_model=TotemResponse, tags=["Totens"])
-def atualizar_totem(totem_id: int, data: TotemCreate):
+@router.put("/totem/{idTotem}", response_model=TotemResponse, tags=["Totens"])
+def atualizar_totem(idTotem: int, data: TotemCreate):
     try:
-        totem = atualizar_totem_uc.execute(totem_id, data.model_dump())
+        totem = atualizar_totem_uc.execute(idTotem, data.model_dump())
         return totem
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
-@router.get("/totens/{totem_id}/bicicletas", response_model=List[BicicletaResponse], tags=["Totens"])
-def listar_bicicletas_do_totem(totem_id: int):
+@router.get("/totem/{idTotem}/bicicletas", response_model=List[BicicletaResponse], tags=["Totens"])
+def listar_bicicletas_do_totem(idTotem: int):
     try:
-        bicicletas = listar_bicicletas_por_totem_uc.execute(totem_id)
+        bicicletas = listar_bicicletas_por_totem_uc.execute(idTotem)
         return bicicletas
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     
-@router.post("/trancas/{idTranca}/status/{acao}", response_model=TrancaResponse, tags=["Trancas"])
+@router.post("/tranca/{idTranca}/status/{acao}", response_model=TrancaResponse, tags=["Trancas"])
 def alterar_status_tranca(idTranca: int, acao: StatusTranca):
     """
     Altera o status de uma tranca (ex: para NOVA, EM_REPARO, APOSENTADA).
