@@ -67,12 +67,14 @@ class BicicletaResponse(BaseModel):
 class IntegrarBicicletaRequest(BaseModel):
     idBicicleta: int
     idTranca: int
+    idFuncionario: int
 
 class RetirarBicicletaRequest(BaseModel):
     idBicicleta: int
     idTranca: int
     statusAcaoReparador: StatusBicicleta
-
+    idFuncionario: int
+    
 class TrancaCreate(BaseModel): 
     numero: int
     localizacao: str
@@ -98,6 +100,7 @@ class RetirarTrancaRequest(BaseModel):
     idTranca: int
     idTotem: int
     statusAcaoReparador: StatusTranca
+    idFuncionario: int
 
 class AcaoBicicletaRequest(BaseModel):
     bicicleta: int
