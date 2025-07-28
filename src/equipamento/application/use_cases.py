@@ -77,7 +77,7 @@ class IntegrarBicicletaNaRedeUseCase:
         if bicicleta.status not in [StatusBicicleta.NOVA, StatusBicicleta.EM_REPARO]:
             raise ValueError(f"Bicicleta com status '{bicicleta.status.value}' não pode ser integrada.")
 
-        if tranca.status != StatusTranca.LIVRE:
+        if tranca.status != StatusTranca.DISPONIVEL:
             raise ValueError("Tranca não está livre.")
         
         bicicleta.status = StatusBicicleta.DISPONIVEL
@@ -113,7 +113,7 @@ class RetirarBicicletaDaRedeUseCase:
             raise ValueError(f"Status de destino '{status_final.value}' é inválido para esta operação.")
 
         bicicleta.status = status_final
-        tranca.status = StatusTranca.LIVRE
+        tranca.status = StatusTranca.DISPONIVEL
         tranca.bicicleta_id = None
 
         bicicleta_atualizada = self.bicicleta_repo.salvar(bicicleta)
@@ -169,7 +169,7 @@ class AlterarStatusTrancaUseCase:
         if novo_status == StatusTranca.OCUPADA:
             raise ValueError(f"Status '{novo_status.value}' não pode ser definido diretamente. Use a operação de trancar com uma bicicleta.")
         
-        if tranca.status == StatusTranca.OCUPADA and novo_status == StatusTranca.LIVRE:
+        if tranca.status == StatusTranca.OCUPADA and novo_status == StatusTranca.DISPONIVEL:
             raise ValueError("Não é possível liberar uma tranca ocupada. Use a operação de destrancar ou retirar bicicleta.")
 
         tranca.status = novo_status
@@ -209,7 +209,7 @@ class IntegrarTrancaNoTotemUseCase:
             raise ValueError(f"Tranca com status '{tranca.status.value}' não pode ser integrada.")
 
         tranca.totem_id = totem.id
-        tranca.status = StatusTranca.LIVRE
+        tranca.status = StatusTranca.DISPONIVEL
         
         tranca_atualizada = self.tranca_repo.salvar(tranca)
 
@@ -384,7 +384,7 @@ class TrancarTrancaUseCase:
         if not tranca: raise ValueError(ERRO_TRANCA_NAO_ENCONTRADA)
         if not bicicleta: raise ValueError(ERRO_BICICLETA_NAO_ENCONTRADA)
 
-        if tranca.status != StatusTranca.LIVRE:
+        if tranca.status != StatusTranca.DISPONIVEL:
             raise ValueError("A tranca não está livre para receber uma bicicleta.")
         
         if bicicleta.status != StatusBicicleta.EM_USO:
@@ -417,7 +417,7 @@ class DestrancarTrancaUseCase:
         if not bicicleta:
              raise ValueError(f"Inconsistência: Bicicleta com ID {tranca.bicicleta_id} não foi encontrada.")
 
-        tranca.status = StatusTranca.LIVRE
+        tranca.status = StatusTranca.DISPONIVEL
         tranca.bicicleta_id = None
         bicicleta.status = StatusBicicleta.EM_USO
 

@@ -75,7 +75,7 @@ def test_integrar_bicicleta_na_rede_caminho_feliz():
 
     # Cenário: uma bicicleta 'NOVA' e uma tranca 'LIVRE' existem
     bicicleta_existente = Bicicleta(id=1, marca="Teste", modelo="TS", ano="2024", numero=100, status=StatusBicicleta.NOVA)
-    tranca_existente = Tranca(id=1, numero=1, localizacao="Totem 1", ano_de_fabricacao="2024", modelo="T", status=StatusTranca.LIVRE)
+    tranca_existente = Tranca(id=1, numero=1, localizacao="Totem 1", ano_de_fabricacao="2024", modelo="T", status=StatusTranca.DISPONIVEL)
     
     mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_existente
     mock_tranca_repo.buscar_por_id.return_value = tranca_existente
@@ -144,7 +144,7 @@ def test_integrar_bicicleta_na_rede_deve_falhar_se_bicicleta_nao_encontrada():
     #    - A busca pela tranca retorna um objeto válido, pois a validação
     #      da bicicleta acontece primeiro no nosso caso de uso.
     mock_bicicleta_repo.buscar_por_id.return_value = None
-    tranca_existente = Tranca(id=1, numero=1, localizacao="T", ano_de_fabricacao="2024", modelo="T1", status=StatusTranca.LIVRE)
+    tranca_existente = Tranca(id=1, numero=1, localizacao="T", ano_de_fabricacao="2024", modelo="T1", status=StatusTranca.DISPONIVEL)
     mock_tranca_repo.buscar_por_id.return_value = tranca_existente
 
     # 3. Instanciamos o caso de uso com os mocks
@@ -171,7 +171,7 @@ def test_integrar_bicicleta_na_rede_deve_falhar_se_status_da_bicicleta_invalido(
     # 2. Cenário de erro: a bicicleta existe, a tranca existe e está livre,
     #    mas o STATUS da bicicleta é EM_USO, o que não permite a integração.
     bicicleta_em_uso = Bicicleta(id=1, marca="A", modelo="B", ano="C", numero=1, status=StatusBicicleta.EM_USO)
-    tranca_livre = Tranca(id=1, numero=1, localizacao="T", ano_de_fabricacao="2024", modelo="T1", status=StatusTranca.LIVRE)
+    tranca_livre = Tranca(id=1, numero=1, localizacao="T", ano_de_fabricacao="2024", modelo="T1", status=StatusTranca.DISPONIVEL)
     
     mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_em_uso
     mock_tranca_repo.buscar_por_id.return_value = tranca_livre
@@ -265,7 +265,7 @@ def test_retirar_bicicleta_da_rede_caminho_feliz():
     
     # Verifica o estado final das entidades
     assert bicicleta_retirada.status == StatusBicicleta.EM_REPARO
-    assert tranca_ocupada.status == StatusTranca.LIVRE
+    assert tranca_ocupada.status == StatusTranca.DISPONIVEL
     assert tranca_ocupada.bicicleta_id is None
 
 
@@ -410,7 +410,7 @@ def test_retirar_bicicleta_deve_falhar_se_tranca_nao_ocupada():
     
     # Cenário: A tranca está LIVRE, não OCUPADA
     bicicleta = Bicicleta(id=1, marca="A", modelo="B", ano="C", numero=1, status=StatusBicicleta.DISPONIVEL)
-    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="2024", modelo="M", status=StatusTranca.LIVRE, bicicleta_id=1)
+    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="2024", modelo="M", status=StatusTranca.DISPONIVEL, bicicleta_id=1)
     
     mock_bicicleta_repo.buscar_por_id.return_value = bicicleta
     mock_tranca_repo.buscar_por_id.return_value = tranca_livre
@@ -430,7 +430,7 @@ def test_listar_trancas_use_case():
     # Arrange
     mock_repo = MagicMock(spec=TrancaRepositoryInterface)
     trancas_esperadas = [
-        Tranca(id=1, numero=101, localizacao="A", ano_de_fabricacao="2023", modelo="T1", status=StatusTranca.LIVRE),
+        Tranca(id=1, numero=101, localizacao="A", ano_de_fabricacao="2023", modelo="T1", status=StatusTranca.DISPONIVEL),
         Tranca(id=2, numero=102, localizacao="B", ano_de_fabricacao="2024", modelo="T2", status=StatusTranca.NOVA),
     ]
     mock_repo.listar_todas.return_value = trancas_esperadas
@@ -447,7 +447,7 @@ def test_listar_trancas_use_case():
 def test_buscar_tranca_por_id_encontrado():
     # Arrange
     mock_repo = MagicMock(spec=TrancaRepositoryInterface)
-    tranca_esperada = Tranca(id=1, numero=101, localizacao="A", ano_de_fabricacao="2023", modelo="T1", status=StatusTranca.LIVRE)
+    tranca_esperada = Tranca(id=1, numero=101, localizacao="A", ano_de_fabricacao="2023", modelo="T1", status=StatusTranca.DISPONIVEL)
     mock_repo.buscar_por_id.return_value = tranca_esperada
     use_case = BuscarTrancaPorIdUseCase(repository=mock_repo)
 
@@ -475,7 +475,7 @@ def test_atualizar_tranca_use_case():
     # Arrange
     mock_repo = MagicMock(spec=TrancaRepositoryInterface)
     dados_atualizacao = {"modelo": "T-800", "localizacao": "Nova Localização"}
-    tranca_existente = Tranca(id=1, numero=101, localizacao="A", ano_de_fabricacao="2023", modelo="T1", status=StatusTranca.LIVRE)
+    tranca_existente = Tranca(id=1, numero=101, localizacao="A", ano_de_fabricacao="2023", modelo="T1", status=StatusTranca.DISPONIVEL)
     
     mock_repo.buscar_por_id.return_value = tranca_existente
     mock_repo.salvar.side_effect = lambda tranca: tranca
@@ -522,7 +522,7 @@ def test_integrar_tranca_no_totem_deve_falhar_se_tranca_ja_integrada():
     mock_totem_repo = MagicMock(spec=TotemRepositoryInterface)
 
     # Cenário: A tranca já tem um totem_id
-    tranca_integrada = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="2024", modelo="M", status=StatusTranca.LIVRE, totem_id=5)
+    tranca_integrada = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="2024", modelo="M", status=StatusTranca.DISPONIVEL, totem_id=5)
     totem = Totem(id=1, localizacao="L", descricao="D")
 
     mock_tranca_repo.buscar_por_id.return_value = tranca_integrada
@@ -556,7 +556,7 @@ def test_destrancar_tranca_deve_falhar_se_tranca_nao_esta_ocupada():
     mock_bicicleta_repo = MagicMock(spec=BicicletaRepositoryInterface)
     mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
 
-    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="2024", modelo="M", status=StatusTranca.LIVRE)
+    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="2024", modelo="M", status=StatusTranca.DISPONIVEL)
     mock_tranca_repo.buscar_por_id.return_value = tranca_livre
 
     use_case = DestrancarTrancaUseCase(tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
@@ -666,7 +666,7 @@ def test_integrar_tranca_no_totem_sucesso():
     use_case = IntegrarTrancaNoTotemUseCase(tranca_repo=mock_tranca_repo, totem_repo=mock_totem_repo)
     resultado = use_case.execute(1, 1, funcionario_id=123)
     assert resultado.totem_id == 1
-    assert resultado.status == StatusTranca.LIVRE
+    assert resultado.status == StatusTranca.DISPONIVEL
     mock_tranca_repo.salvar.assert_called_once()
 
 def test_buscar_bicicleta_em_tranca_sucesso():
@@ -712,7 +712,7 @@ def test_trancar_tranca_sucesso():
     mock_tranca_repo = MagicMock(spec=TrancaRepositoryInterface)
     mock_bicicleta_repo = MagicMock(spec=BicicletaRepositoryInterface)
     bicicleta_em_uso = Bicicleta(id=1, marca="T", modelo="T", ano="T", numero=1, status=StatusBicicleta.EM_USO)
-    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.LIVRE)
+    tranca_livre = Tranca(id=1, numero=1, localizacao="L", ano_de_fabricacao="A", modelo="M", status=StatusTranca.DISPONIVEL)
     mock_tranca_repo.buscar_por_id.return_value = tranca_livre
     mock_bicicleta_repo.buscar_por_id.return_value = bicicleta_em_uso
     mock_tranca_repo.salvar.side_effect = lambda t: t
@@ -731,5 +731,5 @@ def test_destrancar_tranca_sucesso():
     mock_tranca_repo.salvar.side_effect = lambda t: t
     use_case = DestrancarTrancaUseCase(tranca_repo=mock_tranca_repo, bicicleta_repo=mock_bicicleta_repo)
     resultado = use_case.execute(1)
-    assert resultado.status == StatusTranca.LIVRE
+    assert resultado.status == StatusTranca.DISPONIVEL
     assert bicicleta_na_tranca.status == StatusBicicleta.EM_USO

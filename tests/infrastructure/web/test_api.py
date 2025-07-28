@@ -255,7 +255,7 @@ def test_integrar_bicicleta_na_rede_api():
     id_tranca = client.post("/api/trancas", json=tranca_payload).json()["id"]
 
     # Ativa a tranca, mudando seu status de NOVA para LIVRE
-    client.post(f"/api/trancas/{id_tranca}/status/{StatusTranca.LIVRE.value}")
+    client.post(f"/api/trancas/{id_tranca}/status/{StatusTranca.DISPONIVEL.value}")
 
     integracao_payload = {"idBicicleta": id_bicicleta, "idTranca": id_tranca}
 
@@ -276,7 +276,7 @@ def test_destrancar_e_trancar_api_ciclo_completo():
     id_tranca = client.post("/api/trancas", json=tranca_payload).json()["id"]
 
     # Ativa a tranca antes de usá-la
-    client.post(f"/api/trancas/{id_tranca}/status/{StatusTranca.LIVRE.value}")
+    client.post(f"/api/trancas/{id_tranca}/status/{StatusTranca.DISPONIVEL.value}")
     
     # Agora integramos a bicicleta na tranca já ativada
     client.post("/api/bicicletas/integrar-na-rede", json={"idBicicleta": id_bicicleta, "idTranca": id_tranca})
@@ -290,7 +290,7 @@ def test_destrancar_e_trancar_api_ciclo_completo():
 
     # Assert
     assert response_destrancar.status_code == 200
-    assert data_tranca_liberada["status"] == "LIVRE" 
+    assert data_tranca_liberada["status"] == "DISPONÍVEL" 
 
     # --- Parte 2: Teste de Trancar ---
 
