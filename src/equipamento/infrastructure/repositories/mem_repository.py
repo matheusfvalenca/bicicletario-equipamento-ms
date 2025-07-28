@@ -61,11 +61,17 @@ class MemBicicletaRepository(BicicletaRepositoryInterface):
         self._proximo_id = 1
         
         # Adiciona bicicletas iniciais
-        bicicleta1 = Bicicleta(id=1, marca="Caloi", modelo="Ceci", ano="1992", numero=100, status=StatusBicicleta.DISPONIVEL)
-        bicicleta2 = Bicicleta(id=2, marca="Monark", modelo="Barra Forte", ano="1985", numero=200, status=StatusBicicleta.DISPONIVEL)
+        bicicleta1 = Bicicleta(id=1, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.DISPONIVEL)
+        bicicleta2 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.REPARO_SOLICITADO)
+        bicicleta3 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_USO)
+        bicicleta4 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_REPARO)
+        bicicleta5 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_USO)
         
         self.salvar(bicicleta1)
         self.salvar(bicicleta2)
+        self.salvar(bicicleta3)
+        self.salvar(bicicleta4)
+        self.salvar(bicicleta5)
 
 class MemTrancaRepository(TrancaRepositoryInterface):
     """Implementação em memória do repositório de trancas."""
@@ -111,13 +117,18 @@ class MemTrancaRepository(TrancaRepositoryInterface):
         self._proximo_id = 1
 
         # Adiciona trancas iniciais (associadas aos totens e bicicletas)
-        tranca1 = Tranca(id=1, numero=10, localizacao="Totem 1", ano_de_fabricacao="2022", modelo="T1", status=StatusTranca.OCUPADA, bicicleta_id=1, totem_id=1)
-        tranca2 = Tranca(id=2, numero=20, localizacao="Totem 1", ano_de_fabricacao="2022", modelo="T1", status=StatusTranca.LIVRE, totem_id=1)
-        tranca3 = Tranca(id=3, numero=30, localizacao="Totem 2", ano_de_fabricacao="2023", modelo="T2", status=StatusTranca.OCUPADA, bicicleta_id=2, totem_id=2)
-        
+        tranca1 = Tranca(id=1, numero=12345, localizacao="Rio de Janeiro", ano_de_fabricacao="2020", modelo="Caloi", status=StatusTranca.OCUPADA, bicicleta_id=1, totem_id=1)
+        tranca2 = Tranca(id=2, numero=12345, localizacao="Rio de Janeiro", ano_de_fabricacao="2020", modelo="Caloi", status=StatusTranca.DISPONIVEL, totem_id=1)
+        tranca3 = Tranca(id=3, numero=12345, localizacao="Rio de Janeiro", ano_de_fabricacao="2020", modelo="Caloi", status=StatusTranca.OCUPADA, bicicleta_id=2, totem_id=1)
+        tranca4 = Tranca(id=4, numero=12345, localizacao="Rio de Janeiro", ano_de_fabricacao="2020", modelo="Caloi", status=StatusTranca.OCUPADA, bicicleta_id=5, totem_id=1)
+        tranca5 = Tranca(id=5, numero=12345, localizacao="Rio de Janeiro", ano_de_fabricacao="2020", modelo="Caloi", status=StatusTranca.EM_REPARO)
+        tranca6 = Tranca(id=6, numero=12345, localizacao="Rio de Janeiro", ano_de_fabricacao="2020", modelo="Caloi", status=StatusTranca.REPARO_SOLICITADO, totem_id=1)
         self.salvar(tranca1)
         self.salvar(tranca2)
         self.salvar(tranca3)
+        self.salvar(tranca4)
+        self.salvar(tranca5)
+        self.salvar(tranca6)
 
 class MemTotemRepository(TotemRepositoryInterface):
     """Implementação em memória do repositório de totens."""

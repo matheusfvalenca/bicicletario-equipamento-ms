@@ -14,7 +14,7 @@ class StatusBicicleta(str, Enum):
 
 
 class StatusTranca(str, Enum):
-    LIVRE = "LIVRE"
+    DISPONIVEL = "DISPONÍVEL"
     OCUPADA = "OCUPADA"
     NOVA = "NOVA"
     APOSENTADA = "APOSENTADA"

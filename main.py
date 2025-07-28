@@ -15,7 +15,7 @@ app = FastAPI(
 
 # Incluímos as rotas do nosso microsserviço na aplicação principal.
 # O prefixo "/api" é opcional, mas é uma boa prática para organizar os endpoints.
-app.include_router(equipamento_router, prefix="/api")
+app.include_router(equipamento_router)
 
 @app.get("/", tags=["Root"])
 def read_root():
