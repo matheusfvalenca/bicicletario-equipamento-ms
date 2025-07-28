@@ -63,9 +63,9 @@ class MemBicicletaRepository(BicicletaRepositoryInterface):
         # Adiciona bicicletas iniciais
         bicicleta1 = Bicicleta(id=1, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.DISPONIVEL)
         bicicleta2 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.REPARO_SOLICITADO)
-        bicicleta3 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_USO)
-        bicicleta4 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_REPARO)
-        bicicleta5 = Bicicleta(id=2, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_USO)
+        bicicleta3 = Bicicleta(id=3, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_USO)
+        bicicleta4 = Bicicleta(id=4, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_REPARO)
+        bicicleta5 = Bicicleta(id=5, marca="Caloi", modelo="Caloi", ano="2020", numero=12345, status=StatusBicicleta.EM_USO)
         
         self.salvar(bicicleta1)
         self.salvar(bicicleta2)
