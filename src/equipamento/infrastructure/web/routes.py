@@ -392,7 +392,7 @@ def alterar_status_tranca(idTranca: int, acao: StatusTranca):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     
     
-@router.get("/restaurarBanco", status_code=status.HTTP_200_OK, tags=["Testes"])
+@router.get("/restaurarDados", status_code=status.HTTP_200_OK, tags=["Testes"])
 def restaurar_dados():
     """
     Restaura a base de dados em memória para o estado inicial predefinido.
