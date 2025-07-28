@@ -190,7 +190,7 @@ def deletar_bicicleta(bicicleta_id: int):
 @router.post("/bicicleta/integrarNaRede", response_model=TrancaResponse, tags=["Ações"])
 def integrar_bicicleta_na_rede(data: IntegrarBicicletaRequest):
     try:
-        tranca = integrar_bicicleta_uc.execute(bicicleta_id=data.idBicicleta, tranca_id=data.idTranca)
+        tranca = integrar_bicicleta_uc.execute(bicicleta_id=data.idBicicleta, tranca_id=data.idTranca, funcionario_id=data.idFuncionario)
         return tranca
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
@@ -201,7 +201,8 @@ def retirar_bicicleta_da_rede(data: RetirarBicicletaRequest):
         bicicleta = retirar_bicicleta_uc.execute(
             bicicleta_id=data.idBicicleta,
             tranca_id=data.idTranca,
-            status_final=data.statusAcaoReparador
+            status_final=data.statusAcaoReparador,
+            funcionario_id=data.idFuncionario
         )
         return bicicleta
     except ValueError as e:
@@ -304,7 +305,8 @@ def retirar_tranca_do_totem(data: RetirarTrancaRequest):
         tranca = retirar_tranca_uc.execute(
             tranca_id=data.idTranca,
             totem_id=data.idTotem,
-            status_final=data.statusAcaoReparador
+            status_final=data.statusAcaoReparador,
+            funcionario_id=data.idFuncionario
         )
         return tranca
     except ValueError as e:
