@@ -187,7 +187,7 @@ def buscar_bicicleta(bicicleta_id: int):
 def deletar_bicicleta(bicicleta_id: int):
     deletar_bicicleta_uc.execute(bicicleta_id)
 
-@router.post("/bicicleta/integrar-na-rede", response_model=TrancaResponse, tags=["Ações"])
+@router.post("/bicicleta/integrarNaRede", response_model=TrancaResponse, tags=["Ações"])
 def integrar_bicicleta_na_rede(data: IntegrarBicicletaRequest):
     try:
         tranca = integrar_bicicleta_uc.execute(bicicleta_id=data.idBicicleta, tranca_id=data.idTranca)
